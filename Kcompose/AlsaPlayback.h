@@ -19,13 +19,23 @@ public:
 	int getNumDescriptors();
 	void setupDescriptors(struct pollfd *pfds);
 
+	class Source
+	{
+	public:
+		virtual ~Source() { }
+		virtual void getFrame(short *buffer, snd_pcm_sframes_t nFrames) = 0;
+	};
+
+	void setSource(Source *s) { _source = s; }
+
 	void callback();
 
 private:
 	enum { BUFSIZE = 512, kDefaultRate = 44100 };
 
-	short     *buf;
-	snd_pcm_t *playback_handle;
+	short     *_buf;
+	snd_pcm_t *_hPlayback;
+	Source    *_source;
 };
 
 #endif /* ALSAPLAYBACK_H_ */

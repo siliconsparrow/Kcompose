@@ -6,6 +6,7 @@ BUILDPATH = build
 SOURCES = \
 	AlsaMidiIn.cpp \
 	AlsaPlayback.cpp \
+	MiniFmSynth.cpp \
 	main.cpp
 
 INCLUDES = -I. \
