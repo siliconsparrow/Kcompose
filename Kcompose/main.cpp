@@ -7,6 +7,7 @@
 
 #include "AlsaMidiIn.h"
 #include "AlsaPlayback.h"
+#include "PcKeyboardMidiIn.h"
 #include "MiniFmSynth.h"
 #include <alsa/asoundlib.h>
 #include <string>
@@ -20,30 +21,28 @@ int main (int argc, char *argv[])
 		AlsaPlayback pcmOut("default");
 
 		// Open a MIDI device.
-		AlsaMidiIn midiIn;
-
-		// TEST - print available MIDI devices.
-		//midiIn.printDevices();
-
-		// Connect MIDI to the Vortex keyboard.
-		int srcDevice = midiIn.findDevice("Vortex");
-		if(srcDevice < 0) {
-			// TODO: Make a keyboard MIDI source object for when the hardware keyboard is not available.
-			printf("Failed to connect\n");
-			return 1;
+		MidiIn *midiIn;
+		const char *hwDeviceName = "Vortex";
+		int hwKeyboard = AlsaMidiIn::findDevice(hwDeviceName);
+		if(hwKeyboard >= 0) {
+			std::cout << "Connected to " << hwDeviceName << std::endl;
+			midiIn = new AlsaMidiIn();
+			((AlsaMidiIn *)midiIn)->connectFrom(hwKeyboard);
+		} else {
+			std::cout << "Cannot find " << hwDeviceName << ". Using keyboard input." << std::endl;
+			midiIn = new PcKeyboardMidiIn();
 		}
-		midiIn.connectFrom(srcDevice);
 
 		// Create a synth instance and connect it to the input and output.
 		MiniFmSynth synth;
 		pcmOut.setSource(&synth);
-		midiIn.setSink(&synth);
+		midiIn->setSink(&synth);
 
 		// Get file descriptors for polling the PCM and MIDI devices.
-		int seq_nfds = midiIn.getNumDescriptors();
+		int seq_nfds = midiIn->getNumDescriptors();
 		int pcm_nfds = pcmOut.getNumDescriptors();
 		struct pollfd *pfds = (struct pollfd *)alloca(sizeof(struct pollfd) * (seq_nfds + pcm_nfds));
-		midiIn.setupDescriptors(&pfds[0]);
+		midiIn->setupDescriptors(&pfds[0]);
 		pcmOut.setupDescriptors(&pfds[seq_nfds]);
 
 		while (1) {
@@ -53,7 +52,7 @@ int main (int argc, char *argv[])
 				// Process MIDI events.
 				for (int l1 = 0; l1 < seq_nfds; l1++) {
 				   if (pfds[l1].revents > 0) {
-					   midiIn.callback();
+					   midiIn->callback();
 				   }
 				}
 

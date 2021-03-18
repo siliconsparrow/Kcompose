@@ -75,8 +75,7 @@ void MiniFmSynth::midiEvent(snd_seq_event_t *ev)
 
 	case SND_SEQ_EVENT_NOTEOFF:
 		for(int l1 = 0; l1 < POLY; l1++) {
-			if(gate[l1] && note_active[l1]
-					&& (note[l1] == ev->data.note.note)) {
+			if(gate[l1] && note_active[l1] && (note[l1] == ev->data.note.note)) {
 				env_time[l1] = 0;
 				gate[l1] = 0;
 			}
@@ -85,13 +84,13 @@ void MiniFmSynth::midiEvent(snd_seq_event_t *ev)
     }
 }
 
-unsigned g_samples = 0;
+//unsigned g_samples = 0;
 
 // Called when the audio output wants more data.
 void MiniFmSynth::getFrame(short *buffer, snd_pcm_sframes_t nFrames)
 {
-	g_samples += nFrames;
-	std::cout << "Rendered " << (g_samples / 44100) << " seconds" << std::endl;
+//	g_samples += nFrames;
+//	std::cout << "Rendered " << (g_samples / 44100) << " seconds" << std::endl;
 
 	// Test - generate a tone.
 	//for(int i = 0; i < nFrames * 2; i++) {

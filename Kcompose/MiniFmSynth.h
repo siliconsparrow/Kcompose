@@ -12,7 +12,7 @@
 #include "AlsaPlayback.h"
 
 class MiniFmSynth
-	: public AlsaMidiIn::Sink
+	: public MidiIn::Sink
 	, public AlsaPlayback::Source
 {
 public:

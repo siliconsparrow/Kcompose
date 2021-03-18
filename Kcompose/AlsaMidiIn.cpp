@@ -6,7 +6,6 @@
 #define MIDI_CLIENT_NAME "keytarSim"
 
 AlsaMidiIn::AlsaMidiIn()
-	: _sink(0)
 {
     if(snd_seq_open(&_hSeq, MIDI_DEVICE, SND_SEQ_OPEN_INPUT, 0) < 0) {
         throw std::string("Error opening ALSA sequencer.");
@@ -29,6 +28,11 @@ AlsaMidiIn::~AlsaMidiIn()
 int AlsaMidiIn::findDevice(const char *name, MidiCapability desiredCapability)
 {
 	int result = -1;
+	snd_seq_t *hSeq;
+
+	if(snd_seq_open(&hSeq, MIDI_DEVICE, SND_SEQ_OPEN_INPUT, 0) < 0) {
+	    throw std::string("Error opening ALSA sequencer.");
+	}
 
 	snd_seq_client_info_t *cinfo;
 	snd_seq_client_info_alloca(&cinfo);
@@ -37,7 +41,7 @@ int AlsaMidiIn::findDevice(const char *name, MidiCapability desiredCapability)
 	snd_seq_port_info_alloca(&pinfo);
 
 	snd_seq_client_info_set_client(cinfo, -1);
-	while(snd_seq_query_next_client(_hSeq, cinfo) >= 0 && result < 0) {
+	while(snd_seq_query_next_client(hSeq, cinfo) >= 0 && result < 0) {
 		// Look through all the available MIDI ports for this client.
 		snd_seq_port_info_set_client(pinfo, snd_seq_client_info_get_client(cinfo));
 		snd_seq_port_info_set_port(pinfo, -1);
@@ -45,7 +49,7 @@ int AlsaMidiIn::findDevice(const char *name, MidiCapability desiredCapability)
 		// Look for a name match.
 		if(0 == strncasecmp(snd_seq_client_info_get_name(cinfo), name, strlen(name))) {
 			// Iterate through all the ports for this client.
-			while(snd_seq_query_next_port(_hSeq, pinfo) >= 0) {
+			while(snd_seq_query_next_port(hSeq, pinfo) >= 0) {
 				// Check the port supports MIDI input.
 				if((unsigned)desiredCapability == (snd_seq_port_info_get_capability(pinfo) & (unsigned)desiredCapability)) {
 					// Found a match!
@@ -59,11 +63,18 @@ int AlsaMidiIn::findDevice(const char *name, MidiCapability desiredCapability)
 	// Seems to crash if I call these free functions.
 	//snd_seq_port_info_free(pinfo);
 	//snd_seq_client_info_free(cinfo);
+	snd_seq_close(hSeq);
 	return result;
 }
 
 void AlsaMidiIn::printDevices()
 {
+	snd_seq_t *hSeq;
+
+	if(snd_seq_open(&hSeq, MIDI_DEVICE, SND_SEQ_OPEN_INPUT, 0) < 0) {
+		throw std::string("Error opening ALSA sequencer.");
+	}
+
 	snd_seq_client_info_t *cinfo;
 	snd_seq_port_info_t   *pinfo;
 
@@ -71,17 +82,19 @@ void AlsaMidiIn::printDevices()
 	snd_seq_port_info_alloca(&pinfo);
 	snd_seq_client_info_set_client(cinfo, -1);
 
-	while(snd_seq_query_next_client(_hSeq, cinfo) >= 0) {
+	while(snd_seq_query_next_client(hSeq, cinfo) >= 0) {
 		snd_seq_port_info_set_client(pinfo, snd_seq_client_info_get_client(cinfo));
 		snd_seq_port_info_set_port(pinfo, -1);
 		std::cout << "client " << snd_seq_client_info_get_client(cinfo)
 				  << ": '" << snd_seq_client_info_get_name(cinfo)
 				  << "' [type=" << (snd_seq_client_info_get_type(cinfo) == SND_SEQ_USER_CLIENT ? "user" : "kernel")
 				  << "]" << std::endl;
-		while(snd_seq_query_next_port(_hSeq, pinfo) >= 0) {
+		while(snd_seq_query_next_port(hSeq, pinfo) >= 0) {
 			std::cout << "  " << snd_seq_port_info_get_port(pinfo) << " " << snd_seq_port_info_get_name(pinfo) << std::endl;
 		}
 	}
+
+	snd_seq_close(hSeq);
 }
 
 void AlsaMidiIn::connectFrom(int sourceDevice)

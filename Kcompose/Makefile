@@ -5,6 +5,7 @@ BUILDPATH = build
 
 SOURCES = \
 	AlsaMidiIn.cpp \
+	PcKeyboardMidiIn.cpp \
 	AlsaPlayback.cpp \
 	MiniFmSynth.cpp \
 	main.cpp
