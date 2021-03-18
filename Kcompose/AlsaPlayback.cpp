@@ -14,6 +14,7 @@ AlsaPlayback::AlsaPlayback(const char *device)
 	snd_pcm_hw_params_t *hw_params;
 	snd_pcm_sw_params_t *sw_params;
 	unsigned             rate = kDefaultRate;
+	unsigned             hwBufferSize = 2048; // Short buffer for low latency.
 
 	// Open a PCM device.
 	if (snd_pcm_open(&_hPlayback, device, SND_PCM_STREAM_PLAYBACK, 0/*SND_PCM_NONBLOCK*/) < 0) {
@@ -29,11 +30,18 @@ AlsaPlayback::AlsaPlayback(const char *device)
 	snd_pcm_hw_params_set_channels(_hPlayback, hw_params, 2);
 	snd_pcm_hw_params_set_periods(_hPlayback, hw_params, 2, 0);
 	snd_pcm_hw_params_set_period_size(_hPlayback, hw_params, BUFSIZE, 0);
+	snd_pcm_hw_params_set_buffer_size(_hPlayback, hw_params, hwBufferSize);
 	snd_pcm_hw_params(_hPlayback, hw_params);
 	snd_pcm_sw_params_alloca(&sw_params);
 	snd_pcm_sw_params_current(_hPlayback, sw_params);
 	snd_pcm_sw_params_set_avail_min(_hPlayback, sw_params, BUFSIZE);
 	snd_pcm_sw_params(_hPlayback, sw_params);
+
+	// TEST - query the buffer size.
+	snd_pcm_uframes_t bufferSize;
+	snd_pcm_hw_params_get_buffer_size( hw_params, &bufferSize );
+	std::cout << "Init: Buffer size = " << bufferSize << " frames." << std::endl;
+	std::cout << "Init: Significant bits for linear samples = " << snd_pcm_hw_params_get_sbits(hw_params) << std::endl;
 
 	// Set up audio buffer.
 	_buf = (short *)malloc(2 * sizeof(short) * BUFSIZE);
