@@ -7,8 +7,8 @@
 
 #include "AlsaMidiIn.h"
 #include "AlsaPlayback.h"
-#include "PcKeyboardMidiIn.h"
 #include "MiniFmSynth.h"
+#include "Gui.h"
 #include <alsa/asoundlib.h>
 #include <string>
 #include <iostream>
@@ -20,29 +20,32 @@ int main (int argc, char *argv[])
 		// Open a playback channel.
 		AlsaPlayback pcmOut("default");
 
+		// Create the Gui. This will be in a separate thread so as not
+		// to interrupt the audio processing.
+		Gui gui;
+
 		// Open a MIDI device.
-		MidiIn *midiIn;
+		AlsaMidiIn midiIn;
 		const char *hwDeviceName = "Vortex";
 		int hwKeyboard = AlsaMidiIn::findDevice(hwDeviceName);
 		if(hwKeyboard >= 0) {
 			std::cout << "Connected to " << hwDeviceName << std::endl;
-			midiIn = new AlsaMidiIn();
-			((AlsaMidiIn *)midiIn)->connectFrom(hwKeyboard);
+			midiIn.connectFrom(hwKeyboard);
 		} else {
 			std::cout << "Cannot find " << hwDeviceName << ". Using keyboard input." << std::endl;
-			midiIn = new PcKeyboardMidiIn();
+			midiIn.connectFrom(gui.getMidiKeyboardClientId());
 		}
 
 		// Create a synth instance and connect it to the input and output.
 		MiniFmSynth synth;
 		pcmOut.setSource(&synth);
-		midiIn->setSink(&synth);
+		midiIn.setSink(&synth);
 
 		// Get file descriptors for polling the PCM and MIDI devices.
-		int seq_nfds = midiIn->getNumDescriptors();
+		int seq_nfds = midiIn.getNumDescriptors();
 		int pcm_nfds = pcmOut.getNumDescriptors();
 		struct pollfd *pfds = (struct pollfd *)alloca(sizeof(struct pollfd) * (seq_nfds + pcm_nfds));
-		midiIn->setupDescriptors(&pfds[0]);
+		midiIn.setupDescriptors(&pfds[0]);
 		pcmOut.setupDescriptors(&pfds[seq_nfds]);
 
 		while (1) {
@@ -52,7 +55,7 @@ int main (int argc, char *argv[])
 				// Process MIDI events.
 				for (int l1 = 0; l1 < seq_nfds; l1++) {
 				   if (pfds[l1].revents > 0) {
-					   midiIn->callback();
+					   midiIn.callback();
 				   }
 				}
 
@@ -63,6 +66,9 @@ int main (int argc, char *argv[])
 					}
 				}
 			}
+
+			if(gui.isClosed())
+				break;
 		}
 	}
 	catch(std::string &ex)
@@ -70,4 +76,6 @@ int main (int argc, char *argv[])
 		std::cout << ex << std::endl;
 		return 1;
 	}
+
+	return 0;
 }

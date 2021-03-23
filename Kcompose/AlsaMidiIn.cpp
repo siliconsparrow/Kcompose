@@ -102,7 +102,8 @@ void AlsaMidiIn::connectFrom(int sourceDevice)
 	int destDevice = snd_seq_client_id(_hSeq);
 	std::cout << "Connecting " << sourceDevice << " to " << destDevice << std::endl;
 
-	if(0 != snd_seq_connect_from(_hSeq, 0, sourceDevice, 0)) {
+	int rslt = snd_seq_connect_from(_hSeq, 0, sourceDevice, 0);
+	if(0 != rslt) {
 		throw std::string("Failed to connect");
 	}
 }

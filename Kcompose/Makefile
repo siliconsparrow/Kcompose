@@ -1,18 +1,20 @@
 
 TARGET = synthtest
-LIBS = -lasound
+LIBS = -lasound -pthread `pkg-config gtkmm-3.0 --libs`
 BUILDPATH = build
 
 SOURCES = \
 	AlsaMidiIn.cpp \
-	PcKeyboardMidiIn.cpp \
+	PcMidiKeyboard.cpp \
 	AlsaPlayback.cpp \
 	MiniFmSynth.cpp \
+	Gui.cpp \
+	KComposeWindow.cpp \
 	main.cpp
 
 INCLUDES = -I. \
 
-CFLAGS = -O0 -g3
+CFLAGS = -O0 -g3 -pthread `pkg-config gtkmm-3.0 --cflags`
 	
 CXXFLAGS = $(CFLAGS)
 	
@@ -23,9 +25,10 @@ all: $(BUILDPATH) $(addprefix $(BUILDPATH)/,$(OBJS))
 	g++ -o $(BUILDPATH)/$(TARGET) $(addprefix $(BUILDPATH)/,$(OBJS)) $(LIBS)
 
 clean:
-	rm $(addprefix $(BUILDPATH)/,$(OBJS))
-	rm $(BUILDPATH)/$(TARGET)
-	rmdir $(BUILDPATH)
+	rm -Rf $(BUILDPATH)
+#	rm $(addprefix $(BUILDPATH)/,$(OBJS))
+#	rm $(BUILDPATH)/$(TARGET)
+#	rmdir $(BUILDPATH)
 
 $(BUILDPATH):
 	mkdir $(BUILDPATH)
