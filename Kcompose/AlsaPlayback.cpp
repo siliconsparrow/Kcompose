@@ -17,7 +17,7 @@ AlsaPlayback::AlsaPlayback(const char *device)
 	unsigned             hwBufferSize = 2048; // Short buffer for low latency.
 
 	// Open a PCM device.
-	if (snd_pcm_open(&_hPlayback, device, SND_PCM_STREAM_PLAYBACK, 0/*SND_PCM_NONBLOCK*/) < 0) {
+	if (snd_pcm_open(&_hPlayback, device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) {
 		throw std::string("cannot open audio device");
 	}
 

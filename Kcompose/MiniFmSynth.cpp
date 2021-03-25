@@ -89,13 +89,13 @@ void MiniFmSynth::midiEvent(snd_seq_event_t *ev)
 // Called when the audio output wants more data.
 void MiniFmSynth::getFrame(short *buffer, snd_pcm_sframes_t nFrames)
 {
-//	g_samples += nFrames;
-//	std::cout << "Rendered " << (g_samples / 44100) << " seconds" << std::endl;
 
-	// Test - generate a tone.
-	//for(int i = 0; i < nFrames * 2; i++) {
-	//	buffer[i] = (i & 63) * 500;
-	//}
+//	// Test - generate a tone.
+//	for(int i = 0; i < nFrames * 2; i++) {
+//		buffer[i] = (i & 63) * 500;
+//	}
+
+	memset(buffer, 0, nFrames * 2 * sizeof(short));
 
 	for(int l2 = 0; l2 < POLY; l2++) {
 		if (note_active[l2]) {

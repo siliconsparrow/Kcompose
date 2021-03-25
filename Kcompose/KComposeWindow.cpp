@@ -14,6 +14,8 @@ KComposeWindow::KComposeWindow(PcMidiKeyboard *kb)
   set_border_width(10);
   add(m_container);
 
+  memset(keymap, 0, sizeof(keymap));
+
   // Radio buttons:
   m_first.set_label("First");
   m_second.set_label("Second");
@@ -34,12 +36,16 @@ KComposeWindow::KComposeWindow(PcMidiKeyboard *kb)
 
 bool KComposeWindow::on_key_press_event(GdkEventKey* key_event)
 {
-	if(_pcMidiKeyboard != 0) {
-		if(_pcMidiKeyboard->keypress(key_event->keyval)) {
-			return true;
+	unsigned keyVal = key_event->keyval;
+	if(_pcMidiKeyboard != 0 && keyVal < 128) {
+		if(keymap[keyVal] == 0) {
+			if(_pcMidiKeyboard->keypress(keyVal)) {
+				keymap[keyVal] = 1;
+				return true;
+			}
 		}
 	}
-
+/*
   //GDK_MOD1_MASK -> the 'alt' key(mask)
   //GDK_KEY_1 -> the '1' key
   //GDK_KEY_2 -> the '2' key
@@ -65,6 +71,7 @@ bool KComposeWindow::on_key_press_event(GdkEventKey* key_event)
     hide();
     return true;
   }
+  */
 
   //if the event has not been handled, call the base class
   return Gtk::Window::on_key_press_event(key_event);
@@ -72,8 +79,11 @@ bool KComposeWindow::on_key_press_event(GdkEventKey* key_event)
 
 bool KComposeWindow::on_key_release_event(GdkEventKey *key_event)
 {
-	if(_pcMidiKeyboard != 0) {
-		if(_pcMidiKeyboard->keyrelease(key_event->keyval)) {
+	unsigned keyVal = key_event->keyval;
+
+	if(_pcMidiKeyboard != 0 && keyVal < 128) {
+		if(_pcMidiKeyboard->keyrelease(keyVal)) {
+			keymap[keyVal] = 0;
 			return true;
 		}
 	}
