@@ -17,15 +17,15 @@ void *gGuiStart(void *arg)
 
 Gui::Gui()
 	: _pcMidiKeyboard(0)
-	, _done(false)
 {
+	// Run the Gui in its own thread so it doesn't interfere with the audio processing.
 	pthread_create(&_thread, 0, &gGuiStart, this);
 }
 
 bool Gui::isClosed() const
 {
-	// TODO: Can I query the state of the thread instead of this?
-	return _done;
+	// Has the Gui thread finished? It will finish when the window is closed.
+	return 0 == pthread_tryjoin_np(_thread, 0);
 }
 
 int Gui::getMidiKeyboardClientId()
@@ -41,12 +41,10 @@ void Gui::process()
 {
 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("KCompose");
 
-    KComposeWindow window(_pcMidiKeyboard);
+    KComposeWindow window(_msgQueue, _pcMidiKeyboard);
 
     // Shows the window and returns when it is closed.
     app->run(window);
-
-    _done = true;
 
     pthread_exit(0);
 }

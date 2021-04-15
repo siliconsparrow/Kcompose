@@ -13,14 +13,21 @@
 
 #define GAIN 5000.0
 
-// Example presets:
-MiniFmSynth::Preset g_presetHarpsichord(7.8, 3, 5, 24, 0.01, 0.8, 0.0, 0.1);
-MiniFmSynth::Preset g_presetBell(3.5, 7, 9, 0, 0.01, 0.2, 0.3, 1.5);
-MiniFmSynth::Preset g_presetOboe(0.7, 1, 3, 24, 0.05, 0.3, 0.8, 0.2);
+// Presets:
+MiniFmSynth::Preset g_Presets[] = {
+	MiniFmSynth::Preset("Harpsichord", 7.8, 3, 5, 24, 0.01, 0.8, 0.0, 0.1),
+	MiniFmSynth::Preset("Bell",        3.5, 7, 9, 0,  0.01, 0.2, 0.3, 1.5),
+	MiniFmSynth::Preset("Oboe",        0.7, 1, 3, 24, 0.05, 0.3, 0.8, 0.2),
+};
 
-MiniFmSynth::Preset::Preset(double modulation, int harmonic, int subharmonic, int transpose,
+//MiniFmSynth::Preset g_presetHarpsichord(7.8, 3, 5, 24, 0.01, 0.8, 0.0, 0.1);
+//MiniFmSynth::Preset g_presetBell(3.5, 7, 9, 0, 0.01, 0.2, 0.3, 1.5);
+//MiniFmSynth::Preset g_presetOboe(0.7, 1, 3, 24, 0.05, 0.3, 0.8, 0.2);
+
+MiniFmSynth::Preset::Preset(const char *name, double modulation, int harmonic, int subharmonic, int transpose,
 			                double attack, double decay, double sustain, double release)
-	: _modulation(modulation)
+	: _name(name)
+	, _modulation(modulation)
 	, _harmonic(harmonic)
 	, _subharmonic(subharmonic)
 	, _transpose(transpose)
@@ -32,7 +39,7 @@ MiniFmSynth::Preset::Preset(double modulation, int harmonic, int subharmonic, in
 }
 
 MiniFmSynth::MiniFmSynth()
-	: _preset(7.8, 3, 5, 24, 0.01, 0.8, 0.0, 0.1)
+	: _preset(g_Presets[0])
 	, pitch(0)
 {
 	for(int l1 = 0; l1 < POLY; l1++) {

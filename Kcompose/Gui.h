@@ -9,6 +9,7 @@
 #define GUI_H_
 
 #include "PcMidiKeyboard.h"
+#include "GuiMessage.h"
 #include <pthread.h>
 
 class Gui {
@@ -20,10 +21,13 @@ public:
 	int getMidiKeyboardClientId();
 	bool isClosed() const;
 
+	bool       hasMessage() const { return _msgQueue.size() > 0; }
+	GuiMessage getMessage()       { return _msgQueue.pop(); }
+
 private:
-	pthread_t       _thread;
-	PcMidiKeyboard *_pcMidiKeyboard;
-	bool            _done;
+	pthread_t        _thread;
+	GuiMessageQueue  _msgQueue;
+	PcMidiKeyboard  *_pcMidiKeyboard;
 
 public:
 	void process();

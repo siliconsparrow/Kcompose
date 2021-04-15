@@ -19,12 +19,15 @@ public:
 	MiniFmSynth();
 	virtual ~MiniFmSynth();
 
+	enum { kNumPresets = 3 };
+
 	class Preset
 	{
 	public:
-		Preset(double modulation, int harmonic, int subharmonic, int transpose,
+		Preset(const char *name, double modulation, int harmonic, int subharmonic, int transpose,
 			   double attack, double decay, double sustain, double release);
 
+		const char *_name;
 		double _modulation;
 		double _attack;
 		double _decay;
@@ -54,5 +57,7 @@ private:
 
 	double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release);
 };
+
+extern MiniFmSynth::Preset g_Presets[];
 
 #endif /* MINIFMSYNTH_H_ */

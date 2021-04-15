@@ -7,27 +7,50 @@
 
 #include "KComposeWindow.h"
 
-KComposeWindow::KComposeWindow(PcMidiKeyboard *kb)
+KComposeWindow::KComposeWindow(GuiMessageQueue &msgQueue, PcMidiKeyboard *kb)
 	: _pcMidiKeyboard(kb)
+	, _SelectedButton(nullptr)
+	, _msgQueue(msgQueue)
 {
   set_title("K-Compose");
   set_border_width(10);
-  add(m_container);
+  add(_container);
 
-  memset(keymap, 0, sizeof(keymap));
+  memset(_keymap, 0, sizeof(_keymap));
 
-  // Radio buttons:
-  m_first.set_label("First");
-  m_second.set_label("Second");
 
-  m_second.join_group(m_first);
-  m_first.set_active();
+  for(int i = 0; i < MiniFmSynth::kNumPresets; i++) {
+	  Gtk::RadioButton *button = new Gtk::RadioButton();
+	  _radioPreset[i] = button;
+	  button->set_label(g_Presets[i]._name);
+	  if(i == 0) {
+		  button->set_active();
+	  } else {
+		  button->join_group(*_radioPreset[0]);
+	  }
 
-  // Main Container:
-  m_container.add(m_first);
-  m_container.add(m_second);
+	  _container.add(*button);
+
+	  //button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &KComposeWindow::on_radio_button_clicked), sigc::ref(*button)));
+	  button->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this, &KComposeWindow::on_radio_button_clicked), i));
+  }
+
+
+//  // Radio buttons:
+//  m_first.set_label("First");
+//  m_second.set_label("Second");
+//
+//  m_second.join_group(m_first);
+//  m_first.set_active();
+//
+//  // Main Container:
+//  m_container.add(m_first);
+//  m_container.add(m_second);
 
   // Events.
+//  m_first.signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &KComposeWindow::on_radio_button_clicked), sigc::ref(m_first)));
+
+
   // We override the default event signal handler.
   add_events(Gdk::KEY_PRESS_MASK);
 
@@ -38,9 +61,9 @@ bool KComposeWindow::on_key_press_event(GdkEventKey* key_event)
 {
 	unsigned keyVal = key_event->keyval;
 	if(_pcMidiKeyboard != 0 && keyVal < 128) {
-		if(keymap[keyVal] == 0) {
+		if(_keymap[keyVal] == 0) {
 			if(_pcMidiKeyboard->keypress(keyVal)) {
-				keymap[keyVal] = 1;
+				_keymap[keyVal] = 1;
 				return true;
 			}
 		}
@@ -83,7 +106,7 @@ bool KComposeWindow::on_key_release_event(GdkEventKey *key_event)
 
 	if(_pcMidiKeyboard != 0 && keyVal < 128) {
 		if(_pcMidiKeyboard->keyrelease(keyVal)) {
-			keymap[keyVal] = 0;
+			_keymap[keyVal] = 0;
 			return true;
 		}
 	}
@@ -92,7 +115,7 @@ bool KComposeWindow::on_key_release_event(GdkEventKey *key_event)
     return Gtk::Window::on_key_release_event(key_event);
 }
 
-KComposeWindow::~KComposeWindow()
+void KComposeWindow::on_radio_button_clicked(int &presetId) // Gtk::RadioButton& button)
 {
+	_msgQueue.push(GuiMessage(GuiMessage::msgPreset, presetId));
 }
-
